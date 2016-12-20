@@ -108,9 +108,9 @@ class WebDriverMixin(object):
         return self._execute_client_script('testForAngular',
                                            floor(self._test_timeout / 1000))
 
-    def _location_equals(self, location):
+    def _location_equals(self, driver):
         result = self.execute_script('return window.location.href')
-        return result == location
+        return result == driver.current_url.replace(str(self._base_url), '')
 
     @property
     @angular_wait_required
@@ -201,6 +201,7 @@ class WebDriverMixin(object):
 
     def get(self, url):
         super(WebDriverMixin, self).get('about:blank')
+
         full_url = urljoin(str(self._base_url), str(url))
         self.execute_script(
             """
@@ -208,7 +209,8 @@ class WebDriverMixin(object):
             window.location.replace("{}");
             """.format(DEFER_LABEL, full_url)
         )
-        wait = WebDriverWait(self, self._test_timeout)
+
+        wait = WebDriverWait(self, self._test_timeout / 1000)
         wait.until_not(self._location_equals, 'about:blank')
 
         if not self.ignore_synchronization:
@@ -235,3 +237,4 @@ class WebDriverMixin(object):
         result = self._execute_client_script('setLocation', self._root_element,
                                              url, async=False)
         return result
+
